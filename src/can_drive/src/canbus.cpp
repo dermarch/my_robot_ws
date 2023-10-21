@@ -137,11 +137,35 @@ bool Like_Can::joint_control()
 // 泵控制(伺服电机控制)
 bool Like_Can::pump_control()
 {
+    uint id = 0x07;
+    uint can_channel = 0;
+    CAN_DataFrame pump_cmd_candata[2];
     // 检查消息实时性
     if( (pump_cmd.header.stamp - ros::Time::now()).toSec()>0.5 ){
         ROS_WARN("Pump Cmd is not realtime!");
         return 0;
     }
+
+    // 转速指令解析
+    Byte4 byte = int2byte4( int(pump_cmd.cmd*pump_motor_k) );
+
+    // 设置伺服电机转速
+    if( pump_cmd.mode == 0){
+        ROS_WARN("Pump Cmd is not enable!");
+        BYTE candata[8] = {0x00,0x1a,0x00,0x00,0x01,0x00,0x00,0x00};   
+        pump_cmd_candata[0] = can_frame_set(id, candata);
+    }else{
+        BYTE candata0[8] = {0x00,0x1a,0x00,0x00,0x01,0x00,0x00,0x01}; 
+        BYTE candata1[8] = {0x00,0x1a,0x0a,pump_motor_acc,pump_motor_acc,byte.b0,byte.b1,0x00};   
+        pump_cmd_candata[0] = can_frame_set(id, candata0);
+        pump_cmd_candata[1] = can_frame_set(id, candata1);     
+    }
+
+    unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, can_channel, pump_cmd_candata, 2); 
+    if( sndCnt!=2 ){
+        return 0;
+    }    
+
     return 1;  
 }
 
@@ -199,8 +223,20 @@ bool Like_Can::Can_Recv0()
             }
 
             // 伺服电机数据 
-
-
+            // e2:current e4:speed e8e9:position
+            if( received[j].uID==0x07 ){
+                if( DATA[1] == 0x88 ){
+                    if( DATA[2] == 0xe2 ){
+                        pump_states.current = (DATA[3]*256+DATA[4])*0.01;
+                    }
+                    if( DATA[5] == 0xe4 ){
+                        pump_states.current = (DATA[6]*256+DATA[7])/pump_motor_k;
+                    }
+                    if( DATA[2] == 0xe8 &&  DATA[5] == 0xe9){
+                        pump_states.count = get_signed_candata( ( DATA[7] + (DATA[6]<<8) + (DATA[4]<<16) + (DATA[3]<<24) ),32 );
+                    }
+                }
+            }
 
             // 液压缸数据
             if( received[j].uID==0x205 ){
