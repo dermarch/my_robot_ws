@@ -122,6 +122,7 @@ Modbus_Master::Modbus_Master()
         // 判断控制指令实时性
         if( (joint_cmd.header.stamp-ros::Time::now()).toSec()>2 ){
             ROS_WARN("Joint Cmd is not realtime!");
+            loop.sleep();
             continue;
         }
 
