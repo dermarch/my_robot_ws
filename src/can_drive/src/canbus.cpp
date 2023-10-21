@@ -110,28 +110,15 @@ void Like_Can::SendOnceCmd()
 // 需要固定发送的指令，如查询指令，使能指令，周期指令
 void Like_Can::SendLoopCmd()
 {   
-    CAN_DataFrame can_send_LoopCmd1[2];
+    CAN_DataFrame can_send_LoopCmd[1];
 
-    // 查询抓手电机编码器位置 (607)
-    uint id = 0x607;
-    BYTE can_data[8] = {0x40, 0x64, 0x60, 0x00, 00, 00, 00, 00};                // 查询编码器位置
-    BYTE can_data1[8] = {0x40, 0x78, 0x60, 0x00, 00, 00, 00, 00};               // 查询电流
-    can_send_LoopCmd1[0] = can_frame_set(id, can_data);
-    can_send_LoopCmd1[1] = can_frame_set(id, can_data1);
+    // 查询电机状态
+    // 20ms:0x14   50ms:0x32   2000ms:0x07d0
+    uint id = 0x07;
+    BYTE can_data[8] = {0x00, 0x1a, 0x0c, 0x00, 0x32, 0x2e, 0x00, 0x00};                // 查询编码器位置BYTE can_data1[8] = {0x40, 0x78, 0x60, 0x00, 00, 00, 00, 00};               // 查询电流
+    can_send_LoopCmd[0] = can_frame_set(id, can_data);
 
-    unsigned long sndCnt2 = CAN_ChannelSend(dwDeviceHandle, 1, can_send_LoopCmd1, 2);
-
-}
-
-// 机械臂关节控制(5个伺服阀)
-bool Like_Can::joint_control()
-{
-    // 检查消息实时性
-    if( (joint_cmd.header.stamp - ros::Time::now()).toSec()>0.5 ){
-        ROS_WARN("Joint Cmd is not realtime!");
-        return 0;
-    }
-    return 1;  
+    unsigned long sndCnt2 = CAN_ChannelSend(dwDeviceHandle, 0, can_send_LoopCmd, 1);
 }
 
 // 泵控制(伺服电机控制)

@@ -69,7 +69,6 @@ class Like_Can
 
     // controllers
     bool pump_control();                                        // 泵站控制
-    bool joint_control();
     bool cylinder_control();
 
     // funcs
