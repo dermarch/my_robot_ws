@@ -1,0 +1,6 @@
+geometry_msgs/Pose  goal_pose
+geometry_msgs/Point pre_point
+geometry_msgs/Point lift_point
+---  
+int8 fault
+float32 time

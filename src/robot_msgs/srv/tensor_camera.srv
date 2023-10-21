@@ -1,0 +1,10 @@
+string function                     # 功能选择 image pcd grabpose putpose
+string camera                       # 左/右
+---  
+string result
+string camera_id
+float32 err
+float32[12] result_mat
+geometry_msgs/Pose panel_pose       # 相机识别结果
+geometry_msgs/Pose goal_pose        # 经过坐标变换后的最终结果
+float32 cost_time

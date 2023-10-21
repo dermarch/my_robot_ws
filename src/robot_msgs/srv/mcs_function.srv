@@ -1,0 +1,9 @@
+string function     # 功能选择 parking  grab  put
+float32 speed_line
+float32 speed_ptp
+float32 wait_time
+geometry_msgs/Pose goal_pose        # grab and put function need goal pose
+---  
+geometry_msgs/Pose current_pose
+int16 fault_code
+float32 cost_time

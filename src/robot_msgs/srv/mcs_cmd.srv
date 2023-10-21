@@ -1,0 +1,9 @@
+string mode
+float32 speed
+int8 poses_num                  # 点的个数
+geometry_msgs/PoseArray poses   # 位置列表
+float32 wait_time
+---  
+geometry_msgs/Pose current_pose
+int16 fault_code
+float32 cost_time
