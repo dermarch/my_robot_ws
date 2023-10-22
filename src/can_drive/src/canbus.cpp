@@ -135,6 +135,8 @@ bool Like_Can::pump_control()
 
     // 转速指令解析
     Byte4 byte = int2byte4( int(pump_cmd.cmd*pump_motor_k) );
+    ROS_INFO("b0:0x%08x",byte.b0);
+    ROS_INFO("b1:0x%08x",byte.b1);
 
     // 设置伺服电机转速
     if( pump_cmd.mode == 0){
@@ -143,7 +145,7 @@ bool Like_Can::pump_control()
         pump_cmd_candata[0] = can_frame_set(id, candata);
     }else{
         BYTE candata0[8] = {0x00,0x1a,0x00,0x00,0x01,0x00,0x00,0x01}; 
-        BYTE candata1[8] = {0x00,0x1a,0x0a,pump_motor_acc,pump_motor_acc,byte.b0,byte.b1,0x00};   
+        BYTE candata1[8] = {0x00,0x1a,0x0a,pump_motor_acc,pump_motor_acc,0x06,byte.b1,byte.b0};   
         pump_cmd_candata[0] = can_frame_set(id, candata0);
         pump_cmd_candata[1] = can_frame_set(id, candata1);     
     }
@@ -217,7 +219,7 @@ bool Like_Can::Can_Recv0()
                         pump_states.current = (DATA[3]*256+DATA[4])*0.01;
                     }
                     if( DATA[5] == 0xe4 ){
-                        pump_states.current = (DATA[6]*256+DATA[7])/pump_motor_k;
+                        pump_states.speed = (DATA[6]*256+DATA[7])/pump_motor_k;
                     }
                     if( DATA[2] == 0xe8 &&  DATA[5] == 0xe9){
                         pump_states.count = get_signed_candata( ( DATA[7] + (DATA[6]<<8) + (DATA[4]<<16) + (DATA[3]<<24) ),32 );

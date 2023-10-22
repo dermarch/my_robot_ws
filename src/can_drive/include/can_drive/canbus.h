@@ -36,7 +36,7 @@ class Like_Can
     const double joint_states_A1[5] = {0.1,0.1,0.1,0.1,0.1};
     const double joint_states_A2[5] = {0.1,0.1,0.1,0.1,0.1};
 
-    const BYTE pump_motor_acc = 0x03;
+    const BYTE pump_motor_acc = 0x10;
     const double pump_motor_k = 2.73;           // 8192/3000
 
 

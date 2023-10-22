@@ -11,6 +11,7 @@ class Joy_Move
 {   
     private:
     const double k_cur_axes = 20;               // [-1,1]=[-20,20]mA
+    const double pump_speed_step = 20;
     
     public:  
     // joy settings
@@ -105,11 +106,11 @@ Joy_Move::Joy_Move()
         }
         if( joy_cmd.buttons[2]==1 ){
             ROS_INFO("Pump motor speed go fast!");
-            pump_cmd.cmd = limit( pump_cmd.cmd + 50, 0, 1500);
+            pump_cmd.cmd = limit( pump_cmd.cmd + pump_speed_step, 0, 1500);
         }
         if( joy_cmd.buttons[3]==1 ){
             ROS_INFO("Pump motor speed go slow!");
-            pump_cmd.cmd = limit( pump_cmd.cmd - 50, 0, 1500);
+            pump_cmd.cmd = limit( pump_cmd.cmd - pump_speed_step, 0, 1500);
         }
 
         // 关节控制命令
