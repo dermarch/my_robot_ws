@@ -25,6 +25,7 @@ add_message_files(FILES
   Cylinder_States.msg
   Joint_States.msg
   Joint_Cmd.msg
+  Canopen.msg
 )
 
 add_service_files(

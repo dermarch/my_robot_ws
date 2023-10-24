@@ -229,7 +229,7 @@ bool Like_Can::Can_Recv0()
 
             // 液压缸数据
             if( received[j].uID==0x205 ){
-                cylinder_states.position = (DATA[1]*256 + DATA[0])*0.1;
+                cylinder_states.position = (DATA[1]*256 + DATA[0]);
                 cylinder_states.P1       = (DATA[3]*256 + DATA[2]);                    // Pa
                 cylinder_states.P2       = (DATA[5]*256 + DATA[4]);                    // Pa
             }
