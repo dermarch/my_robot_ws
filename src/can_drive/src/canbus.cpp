@@ -205,8 +205,8 @@ bool Like_Can::Can_Recv0()
                 received[j].uID==0x203 || received[j].uID==0x204){
                 int id = received[j].uID - 0x200;
                 joint_states.position[id] = (DATA[1]*256 + DATA[0])*0.1;                // mm
-                joint_states.P1[id]       = (DATA[3]*256 + DATA[2]);                    // Pa
-                joint_states.P2[id]       = (DATA[5]*256 + DATA[4]);                    // Pa
+                joint_states.P1[id]       = (DATA[3]*256 + DATA[2]) * trans_bar;                    // Pa
+                joint_states.P2[id]       = (DATA[5]*256 + DATA[4]) * trans_bar;                    // Pa
                 joint_states.velocity[id] = 0;
                 joint_states.PL[id] = joint_states.P1[id]*joint_states_A1[id] - joint_states.P2[id]*joint_states_A2[id];
             }
@@ -235,13 +235,13 @@ bool Like_Can::Can_Recv0()
             // }
             if( received[j].uID==0x206 ){
                 cylinder_states.Q1       = (DATA[1]*256 + DATA[0]);                    // mL/min
-                cylinder_states.Q2       = (DATA[3]*256 + DATA[2])*0.01;                    // mL/min
+                cylinder_states.Q2       = (DATA[3]*256 + DATA[2]) * trans_hz;                    // mL/min
             }
             if( received[j].uID==0x207 ){
-                cylinder_states.P0       = (DATA[1]*256 + DATA[0])*0.01;                    // Pa
-                cylinder_states.P1       = (DATA[3]*256 + DATA[2])*0.01;                    // Pa
-                cylinder_states.P2       = (DATA[5]*256 + DATA[4])*0.01;                    // Pa
-                cylinder_states.P4       = (DATA[7]*256 + DATA[6])*0.01;                    // Pa
+                cylinder_states.P0       = (DATA[1]*256 + DATA[0]) * trans_bar;                    // Pa
+                cylinder_states.P1       = (DATA[3]*256 + DATA[2]) * trans_bar;                    // Pa
+                cylinder_states.P2       = (DATA[5]*256 + DATA[4]) * trans_bar;                    // Pa
+                cylinder_states.P4       = (DATA[7]*256 + DATA[6]) * trans_bar;                    // Pa
             }
         }
 
