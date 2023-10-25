@@ -40,6 +40,8 @@ class Like_Can
     const double pump_motor_k = 2.73;           // 8192/3000
     const double trans_bar = 0.01;
     const double trans_hz = 0.01;
+    const double trans_mm = 0.1;
+    const double trans_N = 0.1;
 
 
     public:

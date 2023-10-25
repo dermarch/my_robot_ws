@@ -226,22 +226,25 @@ bool Like_Can::Can_Recv0()
                     }
                 }
             }
+            if( received[j].uID==0x205 ){
+                pump_states.P0 = (DATA[1]*256 + DATA[0]) * trans_bar;
+                pump_states.P1 = (DATA[3]*256 + DATA[2]) * trans_bar;                    // Pa
+                pump_states.P2 = (DATA[5]*256 + DATA[4]) * trans_bar;                    // Pa
+                pump_states.Q0 = (DATA[7]*256 + DATA[6]) * trans_bar;                    // mV
+            }
+            
 
             // 液压缸数据
-            // if( received[j].uID==0x205 ){
-            //     cylinder_states.position = (DATA[1]*256 + DATA[0]);
-            //     cylinder_states.P1       = (DATA[3]*256 + DATA[2]);                    // Pa
-            //     cylinder_states.P2       = (DATA[5]*256 + DATA[4]);                    // Pa
-            // }
+
             if( received[j].uID==0x206 ){
-                cylinder_states.Q1       = (DATA[1]*256 + DATA[0]);                    // mL/min
-                cylinder_states.Q2       = (DATA[3]*256 + DATA[2]) * trans_hz;                    // mL/min
+                cylinder_states.Q1       = (DATA[1]*256 + DATA[0]) * trans_hz;                    // hz
+                cylinder_states.Q2       = (DATA[3]*256 + DATA[2]) * trans_hz;                    // hz
+                cylinder_states.P3       = (DATA[5]*256 + DATA[4]) * trans_bar;                   // Pa
+                cylinder_states.P4       = (DATA[7]*256 + DATA[6]) * trans_bar;                   // Pa
             }
             if( received[j].uID==0x207 ){
-                cylinder_states.P0       = (DATA[1]*256 + DATA[0]) * trans_bar;                    // Pa
-                cylinder_states.P1       = (DATA[3]*256 + DATA[2]) * trans_bar;                    // Pa
-                cylinder_states.P2       = (DATA[5]*256 + DATA[4]) * trans_bar;                    // Pa
-                cylinder_states.P4       = (DATA[7]*256 + DATA[6]) * trans_bar;                    // Pa
+                cylinder_states.Y0       = (DATA[1]*256 + DATA[0]) * trans_mm;                    // hz
+                cylinder_states.F0       = (DATA[3]*256 + DATA[2]) * trans_N;                    // hz
             }
         }
 
