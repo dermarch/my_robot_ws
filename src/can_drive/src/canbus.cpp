@@ -228,14 +228,20 @@ bool Like_Can::Can_Recv0()
             }
 
             // 液压缸数据
-            if( received[j].uID==0x205 ){
-                cylinder_states.position = (DATA[1]*256 + DATA[0]);
-                cylinder_states.P1       = (DATA[3]*256 + DATA[2]);                    // Pa
-                cylinder_states.P2       = (DATA[5]*256 + DATA[4]);                    // Pa
-            }
+            // if( received[j].uID==0x205 ){
+            //     cylinder_states.position = (DATA[1]*256 + DATA[0]);
+            //     cylinder_states.P1       = (DATA[3]*256 + DATA[2]);                    // Pa
+            //     cylinder_states.P2       = (DATA[5]*256 + DATA[4]);                    // Pa
+            // }
             if( received[j].uID==0x206 ){
                 cylinder_states.Q1       = (DATA[1]*256 + DATA[0]);                    // mL/min
-                cylinder_states.Q2       = (DATA[3]*256 + DATA[2]);                    // mL/min
+                cylinder_states.Q2       = (DATA[3]*256 + DATA[2])*0.01;                    // mL/min
+            }
+            if( received[j].uID==0x207 ){
+                cylinder_states.P0       = (DATA[1]*256 + DATA[0])*0.01;                    // Pa
+                cylinder_states.P1       = (DATA[3]*256 + DATA[2])*0.01;                    // Pa
+                cylinder_states.P2       = (DATA[5]*256 + DATA[4])*0.01;                    // Pa
+                cylinder_states.P4       = (DATA[7]*256 + DATA[6])*0.01;                    // Pa
             }
         }
 
