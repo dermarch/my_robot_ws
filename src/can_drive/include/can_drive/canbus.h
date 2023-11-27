@@ -37,7 +37,7 @@ class Like_Can
     const double joint_states_A2[5] = {0.1,0.1,0.1,0.1,0.1};
 
     const BYTE pump_motor_acc = 0x10;
-    const double pump_motor_k = 2.73;           // 8192/3000
+    const double pump_motor_k = 1666.66;           // 10/60*10000
     const double trans_bar = 0.01;
     const double trans_hz = 0.01;
     const double trans_mm = 0.1;
@@ -78,6 +78,7 @@ class Like_Can
     // funcs
     bool Init_Can();                                            // 初始化can卡
     bool Can_Recv0();                                           // can0接收并解析为相应的话题 
+    bool Can_Recv1();                                           // can0接收并解析为相应的话题 
     void SendLoopCmd();                                         // 周期性指令，用于查询
     void SendOnceCmd();                                         // 发送一次指令，用于查询
     CAN_DataFrame can_frame_set(uint id, BYTE data[8]);         // 设置can_frame

@@ -27,6 +27,8 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
+    CAN.SendOnceCmd();
+
 
     ros::Rate loop_rate(20);
 
@@ -35,11 +37,15 @@ int main(int argc, char **argv)
 	    ros::spinOnce();                // 根据接收的话题计算要发送的 Can_Frame 并发送相应的 can_frame
 
         CAN.SendLoopCmd();
+
         // can0 receive and pub topics
         if (!CAN.Can_Recv0()){
             ROS_WARN("can0 receive wrong, try to restart");
-            cout<< "Init Can Result: "<< CAN.Init_Can() <<endl;
-            continue;
+        }
+
+        // can1 receive and pub topics
+        if (!CAN.Can_Recv1()){
+            ROS_WARN("can1 receive wrong, try to restart");
         }
 
         // pump_cmd

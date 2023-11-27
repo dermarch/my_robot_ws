@@ -127,33 +127,62 @@ Modbus_Master::Modbus_Master()
         }
 
         if( !joint_cmd.enable ){
-            for( int i=0;i<9;i++){
-                uint16_t u16Data[1] = {0};
+            uint16_t u16Data_[1] = {2047};
+            modbus_write_registers(ctx, 0, 1, u16Data_);     // 中位，对应 0v
+            modbus_write_registers(ctx, 1, 1, u16Data_);
+
+            for( int i=3;i<8;i++){
+                uint16_t u16Data[1] = {0};               
                 modbus_write_registers(ctx, i, 1, u16Data);
             }
             ROS_WARN("Joint Cmd is not enable!");
             continue;
         }
 
-        // 考虑电流方向，两路AO控制一个伺服阀
+
+        double ao_register[8] = {0};
+
+        // V1-V2 使用电流转换模块   0-20mA 转到 -20-20mA
+        // J1-AO0
+        ao_register[0] = (joint_cmd.current[1]+20.0)/2.0;
+        // J2-AO1
+        ao_register[1] = (joint_cmd.current[2]+20.0)/2.0;
+
+        
+
+        // 考虑电流方向，两路AO控制一个伺服阀  V3-V4
         // 0-20mA   0-4095寄存器
-        uint16_t ao_register[8] = {0};
-        for(int i=0;i<4;i++){
-            if( joint_cmd.current[i+1]>=0 ){
-                ao_register[2*i] = joint_cmd.current[i+1];
-                ao_register[2*i+1] = 0;
-            }else{
-                ao_register[2*i] = 0;
-                ao_register[2*i+1] = abs(joint_cmd.current[i+1]);
-            }
+        //J3-AO23
+        if( joint_cmd.current[3]>=0 ){
+            ao_register[2] = joint_cmd.current[3];
+            ao_register[3] = 0;
+        }else{
+            ao_register[2] = 0;
+            ao_register[3] = abs(joint_cmd.current[3]);
+        }
+        // J4-AO45
+        if( joint_cmd.current[4]>=0 ){
+            ao_register[4] = joint_cmd.current[4];
+            ao_register[5] = 0;
+        }else{
+            ao_register[4] = 0;
+            ao_register[5] = abs(joint_cmd.current[4]);
+        }
+        //J0-HUIZHUAN-AO67
+        if( joint_cmd.current[0]>=0 ){
+            ao_register[6] = joint_cmd.current[4]/4;
+            ao_register[7] = 0;
+        }else{
+            ao_register[6] = 0;
+            ao_register[7] = abs(joint_cmd.current[4])/4;
         }
 
         // 写入保持寄存器
         for( int i=0;i<8;i++){
-            uint16_t u16Data[1] = { ao_register[i]*(u_int16_t)200 };
+            uint16_t u16Data[1] = { ao_register[i]*204.75 };
             // uint16_t u16Data[1] = { 2000 };
             ROS_INFO("register%d", i);
-            ROS_INFO("data %d", ao_register[i]*200 );
+            ROS_INFO("data %0.1f", ao_register[i]*204.75 );
             modbus_write_registers(ctx, i, 1, u16Data);
         }
 

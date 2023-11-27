@@ -38,10 +38,15 @@ link_directories(
 )
 
 
-# add_executable(joy_move src/joy_move.cpp)
-# target_link_libraries(joy_move
-# 	${catkin_LIBRARIES}
-# )
+add_executable(cmd_pub src/cmd_pub.cpp)
+target_link_libraries(cmd_pub
+	${catkin_LIBRARIES}
+)
+
+add_executable(cylinder_model src/cylinder_model.cpp)
+target_link_libraries(cylinder_model
+	${catkin_LIBRARIES}
+)
 
 
 

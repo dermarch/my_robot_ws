@@ -97,7 +97,7 @@ Joy_Move::Joy_Move()
         if( joy_cmd.buttons[7]==1 ){
             ROS_INFO("Pump motor start!");
             pump_cmd.mode = 1;
-            pump_cmd.cmd = 500;
+            pump_cmd.cmd = 100;
         }
         if( joy_cmd.buttons[6]==1 ){
             ROS_INFO("Pump motor stop!");

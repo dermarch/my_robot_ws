@@ -42,6 +42,14 @@ Byte4 Like_Can::int2byte4(int data)
     b.b1 = (data >> 8) & 0xff;
     b.b2 = (data >> 16) & 0xff;
     b.b3 = (data >> 24) & 0xff;
+    printf(" %02X\n", b.b0);
+    printf(" %02X\n", b.b1);
+    printf(" %02X\n", b.b2);
+    printf(" %02X\n", b.b3);
+    // std::cout<< b.b0 <<endl;
+    // std::cout<< b.b1 <<endl;
+    // std::cout<< b.b2 <<endl;
+    // std::cout<< b.b3 <<endl;
     return b;
 };
 
@@ -105,58 +113,74 @@ bool Like_Can::Init_Can()
 // 需要固定发送一次的指令，如查询指令，使能指令，主函数中调用一次即可
 void Like_Can::SendOnceCmd()
 {
+    CAN_DataFrame can_send_OnceCmd[1];
+
+    // 电机进入can通信控制模式
+    uint id = 0x00;
+    BYTE can_data[8] = {0x01, 0x00, 0x000, 0x00, 0x00, 0x00, 0x00, 0x00};
+    can_send_OnceCmd[0] = can_frame_set(id, can_data);
+
+    unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, 1, can_send_OnceCmd, 1);
 }
 
 // 需要固定发送的指令，如查询指令，使能指令，周期指令
 void Like_Can::SendLoopCmd()
 {   
-    CAN_DataFrame can_send_LoopCmd[1];
+    CAN_DataFrame can_send_LoopCmd[2];
 
     // 查询电机状态
     // 20ms:0x14   50ms:0x32   2000ms:0x07d0
-    uint id = 0x07;
-    BYTE can_data[8] = {0x00, 0x1a, 0x0c, 0x00, 0x32, 0x2e, 0x00, 0x00};                // 查询编码器位置BYTE can_data1[8] = {0x40, 0x78, 0x60, 0x00, 00, 00, 00, 00};               // 查询电流
+    uint id = 0x601;
+    BYTE can_data[8] = {0x40, 0x69, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00};     // 查询速度
+    BYTE can_data1[8] = {0x40, 0x1C, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00};     // 查询电流
     can_send_LoopCmd[0] = can_frame_set(id, can_data);
+    can_send_LoopCmd[1] = can_frame_set(id, can_data1);
 
-    unsigned long sndCnt2 = CAN_ChannelSend(dwDeviceHandle, 0, can_send_LoopCmd, 1);
+    unsigned long sndCnt2 = CAN_ChannelSend(dwDeviceHandle, 1, can_send_LoopCmd, 2);
 }
 
 // 泵控制(伺服电机控制)
 bool Like_Can::pump_control()
 {
-    uint id = 0x07;
-    uint can_channel = 0;
-    CAN_DataFrame pump_cmd_candata[2];
+    uint id = 0x601;
+    uint can_channel = 1;
+    CAN_DataFrame pump_cmd_candata[3];
+
     // 检查消息实时性
     if( (pump_cmd.header.stamp - ros::Time::now()).toSec()>0.5 ){
         ROS_WARN("Pump Cmd is not realtime!");
         return 0;
     }
 
-    // 转速指令解析
-    Byte4 byte = int2byte4( int(pump_cmd.cmd*pump_motor_k) );
-    ROS_INFO("b0:0x%08x",byte.b0);
-    ROS_INFO("b1:0x%08x",byte.b1);
-
     // 设置伺服电机转速
     if( pump_cmd.mode == 0){
         ROS_WARN("Pump Cmd is not enable!");
-        BYTE candata[8] = {0x00,0x1a,0x00,0x00,0x01,0x00,0x00,0x00};   
+        BYTE candata[8] = {0x2b, 0x40, 0x60, 0x00, 0x06, 0x00, 0x00, 0x00};   
         pump_cmd_candata[0] = can_frame_set(id, candata);
     }else{
-        BYTE candata0[8] = {0x00,0x1a,0x00,0x00,0x01,0x00,0x00,0x01}; 
-        BYTE candata1[8] = {0x00,0x1a,0x0a,pump_motor_acc,pump_motor_acc,0x06,byte.b1,byte.b0};   
+        // step0. 进入速度控制模式
+        BYTE candata0[8] = {0x2f, 0x60, 0x60, 0x00, 0x03, 0x00, 0x00, 0x00};
+        // step1. 使能
+        BYTE candata1[8] = {0x2b, 0x40, 0x60, 0x00, 0x0f, 0x00, 0x00, 0x00};
+        // step2. 设置目标速度
+        int counts_speed = (int)pump_cmd.cmd*pump_motor_k;
+        Byte4 byte = int2byte4(counts_speed);
+        BYTE candata2[8] = {0x23, 0xff, 0x60, 0x00, byte.b0, byte.b1, byte.b2, byte.b3};
+        // BYTE candata2[8] = {0x23, 0xff, 0x60, 0x00, 0x60, 0x54, 0x19, 0x00};
+
+        // step3. 待发送内容  
         pump_cmd_candata[0] = can_frame_set(id, candata0);
         pump_cmd_candata[1] = can_frame_set(id, candata1);     
+        pump_cmd_candata[2] = can_frame_set(id, candata2);  
     }
 
-    unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, can_channel, pump_cmd_candata, 2); 
-    if( sndCnt!=2 ){
+    unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, can_channel, pump_cmd_candata, 3); 
+    if( sndCnt!=3 ){
         return 0;
     }    
 
     return 1;  
-}
+};
 
 // 液压缸控制(单缸)
 bool Like_Can::cylinder_control()
@@ -211,31 +235,7 @@ bool Like_Can::Can_Recv0()
                 joint_states.PL[id] = joint_states.P1[id]*joint_states_A1[id] - joint_states.P2[id]*joint_states_A2[id];
             }
 
-            // 伺服电机数据 
-            // e2:current e4:speed e8e9:position
-            if( received[j].uID==0x07 ){
-                if( DATA[1] == 0x88 ){
-                    if( DATA[2] == 0xe2 ){
-                        pump_states.current = (DATA[3]*256+DATA[4])*0.01;
-                    }
-                    if( DATA[5] == 0xe4 ){
-                        pump_states.speed = (DATA[6]*256+DATA[7])/pump_motor_k;
-                    }
-                    if( DATA[2] == 0xe8 &&  DATA[5] == 0xe9){
-                        pump_states.count = get_signed_candata( ( DATA[7] + (DATA[6]<<8) + (DATA[4]<<16) + (DATA[3]<<24) ),32 );
-                    }
-                }
-            }
-            if( received[j].uID==0x205 ){
-                pump_states.P0 = (DATA[1]*256 + DATA[0]) * trans_bar;
-                pump_states.P1 = (DATA[3]*256 + DATA[2]) * trans_bar;                    // Pa
-                pump_states.P2 = (DATA[5]*256 + DATA[4]) * trans_bar;                    // Pa
-                pump_states.Q0 = (DATA[7]*256 + DATA[6]) * trans_bar;                    // mV
-            }
-            
-
             // 液压缸数据
-
             if( received[j].uID==0x206 ){
                 cylinder_states.Q1       = (DATA[1]*256 + DATA[0]) * trans_hz;                    // hz
                 cylinder_states.Q2       = (DATA[3]*256 + DATA[2]) * trans_hz;                    // hz
@@ -251,6 +251,63 @@ bool Like_Can::Can_Recv0()
         // 发布话题
         pub_joint_states.publish(joint_states);
         pub_cylinder_states.publish(cylinder_states);
+
+        return 1;
+    }
+    return 0;
+};
+
+
+// CAN1接收, Serve_Motor
+bool Like_Can::Can_Recv1()
+{   
+    // 确认是否需要打印接收到的信息
+    bool print_can1;
+    nh.param<bool>("/can_main/print_can1", print_can1, false);
+
+    // can接收设置
+    int rec_len = 0, DATA[8];
+    CAN_DataFrame received[3000];        //接收缓存，设为3000为佳
+
+    if((rec_len = CAN_ChannelReceive(dwDeviceHandle, 1, received, __countof(received), 20))>0){  
+        for(int j=0; j<rec_len; j++){ 
+            
+            // 打印接收到的消息
+            if( print_can1 ){
+                printf("CAN%d RX ID:0x%08X", 1, received[j].uID);
+                printf("DATA:0x");
+                for(int i = 0; i < received[j].nDataLen; i++)
+                {
+                    printf(" %02X", received[j].arryData[i]);
+                } 
+                printf("\n");
+            }
+
+            // 赋值给 DATA 用于后续的处理
+            for(int i = 0; i < received[j].nDataLen; i++){
+                DATA[i]=received[j].arryData[i];
+            } 
+
+            // 伺服电机数据 
+            // e2:current e4:speed e8e9:position
+            if( received[j].uID==0x581 ){
+                if( DATA[1] == 0x69 && DATA[2] == 0x60 ){
+                    pump_states.speed = (DATA[4] + DATA[5]*256 + DATA[6]*256*256 + DATA[7]*256*256*256)/pump_motor_k;
+                }
+                if( DATA[1] == 0x1C && DATA[2] == 0x22 ){
+                    pump_states.current = (DATA[4] + DATA[5]*256 )/100.0;
+                    ROS_WARN("DATA:%0.2d", DATA[4] + DATA[5]*256);
+                }
+            }
+            if( received[j].uID==0x205 ){
+                pump_states.P0 = (DATA[1]*256 + DATA[0]) * trans_bar;
+                pump_states.P1 = (DATA[3]*256 + DATA[2]) * trans_bar;                    // Pa
+                pump_states.P2 = (DATA[5]*256 + DATA[4]) * trans_bar;                    // Pa
+                pump_states.Q0 = (DATA[7]*256 + DATA[6]) * trans_bar;                    // mV
+            }
+        }
+
+        // 发布话题
         pub_pump_states.publish(pump_states);
 
         return 1;
