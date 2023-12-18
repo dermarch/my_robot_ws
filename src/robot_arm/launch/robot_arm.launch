@@ -1,0 +1,12 @@
+<launch>
+
+    <!-- <rosparam file="$(find kzc_main)/config/kzc_all_params.yaml" command="load"/> -->
+
+    <!--can——drive -->
+    <node name="can_drive_node" pkg="can_drive" type="can_main" />
+
+    <!--odom pub -->
+    <node name="valve_modbus_node" pkg="robot_arm" type="modbus_master" output="screen" />
+
+
+</launch>

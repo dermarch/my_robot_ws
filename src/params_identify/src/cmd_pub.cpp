@@ -69,8 +69,10 @@ Cmd_pub::Cmd_pub()
         joint_cmd.current.push_back(0);
     }
 
-    ros::Rate loop_rate(20);
-    int iter = 0;
+    ros::Rate loop_rate(10);
+    int iter1 = 0;
+    int iter2 = 0;
+    float cur = -10;
 
     while(ros::ok())
     {
@@ -80,10 +82,31 @@ Cmd_pub::Cmd_pub()
         nh.getParam("/pump_motor_speed", pump_motor_speed);
         nh.getParam("/joint2_current", joint2_current);
 
-        int tt = iter / 60;
-        float cur = tt*0.2;
+        cur = -5 + 0.2*iter2;
 
-        ROS_INFO("tt: %d, %d, %.2f", iter, tt, cur);
+        if( cur>=5 ){
+            cur = 0;
+            ROS_WARN("collect finish");
+
+            pump_cmd.mode = 0;
+            pump_cmd.cmd = 0;
+            pump_cmd.header.stamp = ros::Time::now();
+            pub_pump_cmd.publish( pump_cmd );
+
+            joint_cmd.enable = 0;
+            joint_cmd.current[2] = 0;
+            pub_joint_cmd.publish( joint_cmd );
+
+            continue;
+        }
+
+        iter1 = iter1 + 1;
+        if( iter1%50 == 0 ){
+            iter2 = iter2+1;
+        }
+
+
+        ROS_INFO("iter: %d, %d, %.2f", iter1, iter2, cur);
 
         // 判断液压缸是否到达顶端
         // if( cylinder_states.Y0>=150 ){
@@ -92,13 +115,13 @@ Cmd_pub::Cmd_pub()
 
         // pub pump_cmd
         pump_cmd.mode = 1;
-        pump_cmd.cmd = pump_motor_speed;
+        pump_cmd.cmd = 1000;
         pump_cmd.header.stamp = ros::Time::now();
         pub_pump_cmd.publish( pump_cmd );
 
         // pub joint cmd
         joint_cmd.enable = 1;
-        joint_cmd.current[2] = 0;
+        joint_cmd.current[2] = cur;
         pub_joint_cmd.publish( joint_cmd );
 
 
@@ -114,9 +137,7 @@ Cmd_pub::Cmd_pub()
         // cylinder_states.P3 = 2000;
         // cylinder_states.P4 = 1000;
         // cylinder_states.header.stamp = ros::Time::now();
-        iter = iter + 1;
         // pub_cylinder_sta.publish(cylinder_states);
-
 
 
         loop_rate.sleep();

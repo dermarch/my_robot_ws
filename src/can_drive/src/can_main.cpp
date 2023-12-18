@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     CAN.SendOnceCmd();
 
 
-    ros::Rate loop_rate(20);
+    ros::Rate loop_rate(10);
 
     while(ros::ok())
     {   

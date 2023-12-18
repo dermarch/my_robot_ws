@@ -20,14 +20,34 @@ void Like_Can::cylinder_cmd_callback(const robot_msgs::Cylinder_Cmd::ConstPtr &m
 CAN_DataFrame Like_Can::can_frame_set(uint id, BYTE data[8])
 {
     CAN_DataFrame frame;
+    int len = __countof(data);
 
     frame.nSendType = 0;      // 0-正常发送;1-单次发送;2-自发自收;3-单次自发自收
     frame.bRemoteFlag = 0;    // 0-数据帧；1-远程帧
     frame.bExternFlag = 0;    // 0-标准帧；1-扩展帧
-    frame.nDataLen = 8;       // DLC
+    frame.nDataLen = len;       // DLC
 
     frame.uID = id;
-    for (int j=0; j<8; j++)
+    for (int j=0; j<len; j++)
+    {
+        frame.arryData[j] = data[j];
+    }
+    return frame;      
+};
+
+// can_frame set
+CAN_DataFrame Like_Can::can_frame_set2(uint id, BYTE data[2])
+{
+    CAN_DataFrame frame;
+    int len = __countof(data);
+
+    frame.nSendType = 0;      // 0-正常发送;1-单次发送;2-自发自收;3-单次自发自收
+    frame.bRemoteFlag = 0;    // 0-数据帧；1-远程帧
+    frame.bExternFlag = 0;    // 0-标准帧；1-扩展帧
+    frame.nDataLen = len;       // DLC
+
+    frame.uID = id;
+    for (int j=0; j<len; j++)
     {
         frame.arryData[j] = data[j];
     }
@@ -113,19 +133,44 @@ bool Like_Can::Init_Can()
 // 需要固定发送一次的指令，如查询指令，使能指令，主函数中调用一次即可
 void Like_Can::SendOnceCmd()
 {
-    CAN_DataFrame can_send_OnceCmd[1];
+    // CAN0 setting
+    CAN_DataFrame can_send_OnceCmd0[1];
+
+    // gcan数据采集卡启动
+    uint id = 0x000;
+    BYTE can0_data1[2] = {0x01, 0x01};
+    can_send_OnceCmd0[1] = can_frame_set2(id, can0_data1);
+
+    unsigned long sndCnt0 = CAN_ChannelSend(dwDeviceHandle, 0, can_send_OnceCmd0, 1);
+
+
+    // CAN1 setting
+    CAN_DataFrame can_send_OnceCmd1[1];
 
     // 电机进入can通信控制模式
-    uint id = 0x00;
-    BYTE can_data[8] = {0x01, 0x00, 0x000, 0x00, 0x00, 0x00, 0x00, 0x00};
-    can_send_OnceCmd[0] = can_frame_set(id, can_data);
+    id = 0x00;
+    BYTE can1_data1[8] = {0x01, 0x00, 0x000, 0x00, 0x00, 0x00, 0x00, 0x00};
+    can_send_OnceCmd1[0] = can_frame_set(id, can1_data1);
 
-    unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, 1, can_send_OnceCmd, 1);
+    unsigned long sndCnt1 = CAN_ChannelSend(dwDeviceHandle, 1, can_send_OnceCmd1, 1);
+
+
 }
 
 // 需要固定发送的指令，如查询指令，使能指令，周期指令
 void Like_Can::SendLoopCmd()
 {   
+    // CAN0 setting
+    // CAN_DataFrame can_send_OnceCmd0[1];
+
+    // // gcan数据采集卡启动
+    // uint id = 0x00;
+    // BYTE can0_data1[2] = {0x01, 0x01};
+    // can_send_OnceCmd0[1] = can_frame_set(id, can0_data1);
+
+    // unsigned long sndCnt0 = CAN_ChannelSend(dwDeviceHandle, 0, can_send_OnceCmd0, 1);
+
+
     CAN_DataFrame can_send_LoopCmd[2];
 
     // 查询电机状态
@@ -234,6 +279,12 @@ bool Like_Can::Can_Recv0()
                 joint_states.velocity[id] = 0;
                 joint_states.PL[id] = joint_states.P1[id]*joint_states_A1[id] - joint_states.P2[id]*joint_states_A2[id];
             }
+            if( received[j].uID==0x205 ){
+                pump_states.P0 = (DATA[1]*256 + DATA[0]) * trans_bar;
+                pump_states.P1 = (DATA[3]*256 + DATA[2]) * trans_bar;                    // Pa
+                pump_states.P2 = (DATA[5]*256 + DATA[4]) * trans_bar;                    // Pa
+                pump_states.Q0 = (DATA[7]*256 + DATA[6]) * trans_bar;                    // mV
+            }
 
             // 液压缸数据
             if( received[j].uID==0x206 ){
@@ -299,12 +350,7 @@ bool Like_Can::Can_Recv1()
                     ROS_WARN("DATA:%0.2d", DATA[4] + DATA[5]*256);
                 }
             }
-            if( received[j].uID==0x205 ){
-                pump_states.P0 = (DATA[1]*256 + DATA[0]) * trans_bar;
-                pump_states.P1 = (DATA[3]*256 + DATA[2]) * trans_bar;                    // Pa
-                pump_states.P2 = (DATA[5]*256 + DATA[4]) * trans_bar;                    // Pa
-                pump_states.Q0 = (DATA[7]*256 + DATA[6]) * trans_bar;                    // mV
-            }
+
         }
 
         // 发布话题

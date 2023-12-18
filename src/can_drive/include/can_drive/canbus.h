@@ -82,6 +82,7 @@ class Like_Can
     void SendLoopCmd();                                         // 周期性指令，用于查询
     void SendOnceCmd();                                         // 发送一次指令，用于查询
     CAN_DataFrame can_frame_set(uint id, BYTE data[8]);         // 设置can_frame
+    CAN_DataFrame can_frame_set2(uint id, BYTE data[2]);         // 设置can_frame
     Byte4 int2byte4(int data);                                  // 将int数据转为4个byte，用于can发送
     int get_signed_candata(int can_data, int n);                // 解析有符号位的can数据
 

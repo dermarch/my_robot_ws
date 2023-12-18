@@ -38,7 +38,7 @@ class SmartCarKeyboardTeleopNode
         ros::Publisher pub_joint_cmd;  
         ros::Publisher pub_pump_cmd;  
 
-        const double joint_cur_step = 0.2;
+        const double joint_cur_step = 0.1;
         const double pump_speed_step = 20;
   
     public:  
