@@ -115,7 +115,7 @@ Modbus_Master::Modbus_Master()
         exit(0);
     }
 
-    ros::Rate loop(20);
+    ros::Rate loop(2);
     while(ros::ok())
     {
         ros::spinOnce();
@@ -135,6 +135,8 @@ Modbus_Master::Modbus_Master()
                 modbus_write_registers(ctx, i, 1, u16Data);
             }
 
+            loop.sleep();
+
             ROS_WARN("Joint Cmd is not enable!");
             continue;
         }
@@ -149,7 +151,6 @@ Modbus_Master::Modbus_Master()
             modbus_write_registers(ctx, i, 1, u16Data);
         } 
 
-        ros::spinOnce();
         loop.sleep();
     }
 

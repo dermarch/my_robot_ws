@@ -69,7 +69,7 @@ Cmd_pub::Cmd_pub()
         joint_cmd.current.push_back(0);
     }
 
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(2);
     int iter1 = 0;
     int iter2 = 0;
     float cur = -10;
@@ -82,7 +82,7 @@ Cmd_pub::Cmd_pub()
         nh.getParam("/pump_motor_speed", pump_motor_speed);
         nh.getParam("/joint2_current", joint2_current);
 
-        cur = -5 + 0.2*iter2;
+        cur = -6 + 0.2*iter1;
 
         if( cur>=5 ){
             cur = 0;
@@ -96,6 +96,8 @@ Cmd_pub::Cmd_pub()
             joint_cmd.enable = 0;
             joint_cmd.current[2] = 0;
             pub_joint_cmd.publish( joint_cmd );
+
+            loop_rate.sleep();
 
             continue;
         }

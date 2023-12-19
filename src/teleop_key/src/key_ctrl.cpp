@@ -38,7 +38,7 @@ class SmartCarKeyboardTeleopNode
         ros::Publisher pub_joint_cmd;  
         ros::Publisher pub_pump_cmd;  
 
-        const double joint_cur_step = 0.1;
+        const double joint_cur_step = 0.2;
         const double pump_speed_step = 20;
   
     public:  
@@ -214,7 +214,8 @@ void SmartCarKeyboardTeleopNode::keyboardLoop()
         pump_cmd.header.stamp = ros::Time::now();
 
         std::cout<<"pump_cmd: "<<pump_cmd.cmd<<std::endl;
-        std::cout<<"joint_cmd: "<<joint_cmd.current[2]<<std::endl;
+        std::cout<<"joint_cmd1: "<<joint_cmd.current[1]<<std::endl;
+        std::cout<<"joint_cmd2: "<<joint_cmd.current[2]<<std::endl;
 
         pub_joint_cmd.publish(joint_cmd);  
         pub_pump_cmd.publish(pump_cmd);
